@@ -1,5 +1,7 @@
 package maybe
 
+import "encoding/json"
+
 // Option[T] represents an optional value: either Some(value) or None.
 // It provides a type-safe alternative to nil pointers and helps avoid nil pointer panics.
 // The zero value of Option is None (no value present).
@@ -116,4 +118,33 @@ func (o Option[T]) AndThenOr(defaultValue T, fn func(Option[T]) Option[T]) Optio
 		return fn(Some(defaultValue))
 	}
 	return fn(o)
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+// Attempts to marshal the contained value if present, or returns an error if None.
+func (o Option[T]) MarshalJSON() ([]byte, error) {
+	if !o.has {
+		return nil, ErrMissingValue
+	}
+	return json.Marshal(o.value)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+// Unmarshal JSON data into the Option, setting it to None if the JSON value is null.
+func (o *Option[T]) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		var zero T
+		o.has = false
+		o.value = zero
+		return nil
+	}
+
+	var value T
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+
+	o.value = value
+	o.has = true
+	return nil
 }
