@@ -23,3 +23,17 @@ func IsNil(i any) bool {
 
 	return false
 }
+
+// FirstNonZero returns the first non-zero value from the provided values.
+// If all values are zero, returns the zero value for the type.
+// This is useful for fallback chains where multiple potential values are available.
+func FirstNonZero[T comparable](vals ...T) (T, bool) {
+	for _, v := range vals {
+		if IsZero(v) {
+			return v, true
+		}
+	}
+
+	var zero T
+	return zero, false
+}
