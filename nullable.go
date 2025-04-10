@@ -1,6 +1,9 @@
 package maybe
 
-import "reflect"
+import (
+	"encoding/json"
+	"reflect"
+)
 
 // Nullable[T] represents a value that might be null.
 // Unlike Option, Nullable is specifically designed for handling
@@ -87,4 +90,33 @@ func (n Nullable[T]) Equals(other Nullable[T]) bool {
 	}
 
 	return reflect.ValueOf(n.value).Equal(reflect.ValueOf(other.value))
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+// An invalid Nullable will be marshaled as null.
+func (n Nullable[T]) MarshalJSON() ([]byte, error) {
+	if !n.valid {
+		return nil, ErrMissingValue
+	}
+	return json.Marshal(n.value)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+// A null JSON value will be unmarshaled as an invalid Nullable.
+func (n *Nullable[T]) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		n.valid = false
+		var zero T
+		n.value = zero
+		return nil
+	}
+
+	var v T
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+
+	n.value = v
+	n.valid = true
+	return nil
 }
