@@ -139,12 +139,12 @@ func main() {
     fmt.Println("Is name none after unset:", emptyName.IsNone())  // true
 
     // Convert to/from pointers
-    var strPtr *string = name.Ptr()                // Pointer to "Nilotpal"
-    var nilPtr *string = emptyName.Ptr()           // nil pointer
+    // var strPtr *string = name.Ptr()                // Pointer to "Nilotpal"
+    // var nilPtr *string = emptyName.Ptr()           // nil pointer
 
-    someStr := "Hello"
-    optFromPtr := maybe.FromPtr(&someStr)          // Some("Hello")
-    optFromNil := maybe.FromPtr(nilPtr)            // None
+    // someStr := "Hello"
+    // optFromPtr := maybe.FromPtr(&someStr)          // Some("Hello")
+    // optFromNil := maybe.FromPtr(nilPtr)            // None
 
     // Working with Nullable (for database/JSON)
     userID := maybe.NullableOf(123)
@@ -163,11 +163,11 @@ func main() {
     fmt.Println("No ID or default:", noID.ExtractOr(999))  // 999
 
     // Convert between Option and Nullable
-    optionID := userID.ToOption()                  // Some(123)
+    // optionID := userID.ToOption()                  // Some(123)
 
     // Create Nullable from pointer
-    ptrID := userID.ToPtr()                        // Pointer to 123
-    nullableFromPtr := maybe.NullableFromPtr(ptrID)  // Valid Nullable with 123
+    // ptrID := userID.ToPtr()                        // Pointer to 123
+    // nullableFromPtr := maybe.NullableFromPtr(ptrID)  // Valid Nullable with 123
 
     // Using with zero values
     zeroInt := maybe.NullableOf(0)                 // Valid Nullable containing 0
