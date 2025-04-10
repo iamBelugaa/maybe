@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 )
 
@@ -157,4 +158,75 @@ func (n Nullable[T]) Value() (driver.Value, error) {
 	}
 
 	return nil, fmt.Errorf("unsupported type %T for database/sql", n.Value)
+}
+
+// Scan implements the sql.Scanner interface.
+// This method allows Nullable[T] to be used with the database/sql package
+// when reading rows from the database into Go values.
+//
+// It ensures that the scanned value is either correctly typed or safely converted
+// to the generic type T. If the DB column is NULL, it marks the Nullable as invalid.
+func (n *Nullable[T]) Scan(value any) error {
+	// If the database column is NULL, mark this Nullable as invalid (null) and return.
+	if IsNil(value) {
+		n.valid = false
+		var zero T
+		n.value = zero
+		return nil
+	}
+
+	// Mark this Nullable as valid since a non-NULL value was provided.
+	n.valid = true
+
+	// Try direct type assertion first (fast path for matching types).
+	if val, ok := value.(T); ok {
+		n.value = val
+		return nil
+	}
+
+	// Determine the destination type (T) using reflection.
+	destType := reflect.TypeOf((*T)(nil)).Elem()
+	// Create a reflect.Value for the source DB value.
+	sourceVal := reflect.ValueOf(value)
+
+	// Check if the value can be directly converted to T.
+	if sourceVal.CanConvert(destType) {
+		n.value = sourceVal.Convert(destType).Interface().(T)
+		return nil
+	}
+
+	// Handle common conversions
+	switch destType.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		switch v := value.(type) {
+		// Convert int64 (most common integer representation in SQL) or []byte (from text) to integer types.
+		case int64:
+			{
+				val := reflect.ValueOf(v).Convert(destType).Interface().(T)
+				n.value = val
+				return nil
+			}
+		case []byte:
+			// Some drivers return []byte for textual representations, even for numbers.
+			{
+				i, err := strconv.ParseInt(string(v), 10, 64)
+				if err != nil {
+					return err
+				}
+				val := reflect.ValueOf(i).Convert(destType).Interface().(T)
+				n.value = val
+				return nil
+			}
+		}
+	case reflect.String:
+		// Convert []byte (text blob) to string, often used for text columns.
+		switch v := value.(type) {
+		case []byte:
+			val := reflect.ValueOf(string(v)).Convert(destType).Interface().(T)
+			n.value = val
+			return nil
+		}
+	}
+
+	return fmt.Errorf("cannot scan %T into Nullable[%T]", value, n.Value)
 }
