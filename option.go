@@ -81,3 +81,39 @@ func (o Option[T]) Ptr() *T {
 	}
 	return nil
 }
+
+// Unwrap returns the contained value if present.
+// Panics with ErrMissingValue if the Option is None.
+// Use this only when you're certain the Option contains a value.
+func (o Option[T]) Unwrap() T {
+	if !o.has {
+		panic(ErrMissingValue)
+	}
+	return o.value
+}
+
+// UnwrapOr returns the contained value if present, otherwise returns the provided default value.
+func (o Option[T]) UnwrapOr(defaultValue T) T {
+	if !o.has {
+		return defaultValue
+	}
+	return o.value
+}
+
+// AndThen chains Option operations, executing the provided function only if the Option is Some.
+// If the Option is None, returns None without executing the function.
+func (o Option[T]) AndThen(fn func(Option[T]) Option[T]) Option[T] {
+	if !o.has {
+		return None[T]()
+	}
+	return fn(o)
+}
+
+// AndThenOr chains Option operations but uses the provided default value if the Option is None.
+// Always executes the function, either with the Option's value or with the default value.
+func (o Option[T]) AndThenOr(defaultValue T, fn func(Option[T]) Option[T]) Option[T] {
+	if !o.has {
+		return fn(Some(defaultValue))
+	}
+	return fn(o)
+}
