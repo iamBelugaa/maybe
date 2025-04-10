@@ -76,3 +76,73 @@ func ForEachSlice[T any](input []T, fn func(T)) {
 		fn(v)
 	}
 }
+
+// CollectOptions transforms a slice of Options into an Option containing a slice
+// of all Some values. Returns None if any element is None.
+func CollectOptions[T any](options []Option[T]) Option[[]T] {
+	result := make([]T, 0, len(options))
+
+	for _, opt := range options {
+		v, ok := opt.Value()
+		if opt.IsNone() || !ok {
+			return None[[]T]()
+		}
+		result = append(result, v)
+	}
+
+	return Some(result)
+}
+
+// FilterSomeOptions returns a slice containing only the values from non-empty Options.
+// Preserves only the present values, discarding None options.
+func FilterSomeOptions[T any](options []Option[T]) []T {
+	result := make([]T, 0, len(options))
+
+	for _, opt := range options {
+		v, ok := opt.Value()
+		if opt.IsSome() && ok {
+			result = append(result, v)
+		}
+	}
+
+	return result
+}
+
+// PartitionOptions separates a slice of Options into two slices
+//   - One with the values from Some options.
+//   - One with the indices of None options.
+func PartitionOptions[T any](options []Option[T]) (values []T, noneIndices []int) {
+	values = make([]T, 0, len(options))
+	noneIndices = make([]int, 0)
+
+	for i, opt := range options {
+		v, ok := opt.Value()
+
+		if opt.IsSome() && ok {
+			values = append(values, v)
+		} else {
+			noneIndices = append(noneIndices, i)
+		}
+	}
+
+	return values, noneIndices
+}
+
+// TryMap applies a function that might fail to each element in a slice.
+// Returns an Option containing the results if all function calls succeed,
+// or None if any call fails.
+func TryMap[T, U any](input []T, fn func(T) Option[U]) Option[[]U] {
+	result := make([]U, 0, len(input))
+
+	for _, v := range input {
+		opt := fn(v)
+		v, ok := opt.Value()
+
+		if opt.IsNone() || !ok {
+			return None[[]U]()
+		}
+		result = append(result, v)
+	}
+
+	return Some(result)
+}
