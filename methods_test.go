@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iamNilotpal/maybe"
+	"github.com/iamBelugaa/maybe"
 )
 
 // TestIsZero verifies the behavior of maybe.IsZero for various types.

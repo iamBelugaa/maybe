@@ -3,7 +3,7 @@ package maybe_test
 import (
 	"testing"
 
-	"github.com/iamNilotpal/maybe"
+	"github.com/iamBelugaa/maybe"
 )
 
 // TestOptionBasic verifies the correctness of core Option type functionality.
