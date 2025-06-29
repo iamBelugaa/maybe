@@ -48,3 +48,36 @@ func (o *Option[T]) Unset() {
 	var zero T
 	o.value = zero
 }
+
+// IsSome returns true if the Option contains a value.
+func (o Option[T]) IsSome() bool {
+	return o.has
+}
+
+// IsNone returns true if the Option does not contain a value.
+func (o Option[T]) IsNone() bool {
+	return !o.has
+}
+
+// Value returns the contained value and a boolean indicating if the value is present.
+// If the Option is None, returns the zero value of T and false.
+func (o Option[T]) Value() (T, bool) {
+	return o.value, o.has
+}
+
+// ValueOr returns the contained value if present, otherwise returns the provided default value.
+func (o Option[T]) ValueOr(defaultValue T) T {
+	if o.has {
+		return o.value
+	}
+	return defaultValue
+}
+
+// Ptr converts the Option to a pointer.
+// Returns a pointer to the value if Some, or nil if None.
+func (o Option[T]) Ptr() *T {
+	if o.has {
+		return &o.value
+	}
+	return nil
+}
