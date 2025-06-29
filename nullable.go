@@ -1,8 +1,11 @@
 package maybe
 
 import (
+	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"reflect"
+	"time"
 )
 
 // Nullable[T] represents a value that might be null.
@@ -119,4 +122,39 @@ func (n *Nullable[T]) UnmarshalJSON(data []byte) error {
 	n.value = v
 	n.valid = true
 	return nil
+}
+
+// Value implements the driver.Valuer interface.
+// This method allows Nullable[T] to be used seamlessly with the database/sql package
+// when inserting values into a SQL database.
+//
+// The returned driver.Value must be one of the types supported by database drivers,
+func (n Nullable[T]) Value() (driver.Value, error) {
+	// If the Nullable is invalid (null), return nil, indicating a SQL NULL value.
+	if !n.valid {
+		return nil, nil
+	}
+
+	// Handle common native types directly — these are already compatible with driver.Value.
+	switch v := any(n.Value).(type) {
+	case int64, float64, bool, []byte, string, time.Time:
+		return v, nil
+	}
+
+	// For other types, convert to a driver.Value type
+	rv := reflect.ValueOf(n.Value)
+
+	switch rv.Kind() {
+	// Convert all integer types to int64, which is universally accepted by drivers.
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+		return int64(rv.Int()), nil
+		// Convert unsigned integers to int64 (may truncate large uint64 values).
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return int64(rv.Uint()), nil
+		// Convert float32 to float64, as float64 is accepted by drivers.
+	case reflect.Float32:
+		return float64(rv.Float()), nil
+	}
+
+	return nil, fmt.Errorf("unsupported type %T for database/sql", n.Value)
 }
