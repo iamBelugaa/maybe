@@ -1,4 +1,4 @@
-# maybe - Go Optional, Nullable Types and Functional Utilities
+# maybe - A Go Package for Optionals, Nullables, and Nil-Safe Data Handling
 
 `maybe` is a Go package providing type-safe optional values and functional
 programming utilities using Go generics. It helps eliminate nil pointer panics
