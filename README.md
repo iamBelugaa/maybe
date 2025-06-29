@@ -29,3 +29,48 @@ transformation.
   values.
 - **Database Integration**: First-class support for handling SQL NULL values.
 - **JSON Compatibility**: Seamless handling of missing or null JSON fields.
+
+## Installation
+
+```bash
+go get github.com/iamNilotpal/maybe
+```
+
+## Core Types
+
+### Option
+
+`Option[T]` represents an optional value: either `Some(value)` or `None`. It
+provides a type-safe alternative to nil pointers and helps avoid nil pointer
+panics. The zero value of `Option` is `None` (no value present).
+
+Key operations:
+
+- `Some(value)`: Create an Option with a value.
+- `None[T]()`: Create an Option with no value.
+- `FromPtr(ptr)`: Convert a pointer to an Option.
+- `IsSome()`: Check if value is present.
+- `IsNone()`: Check if value is absent.
+- `Value()`: Get the value and a success boolean.
+- `ValueOr(default)`: Get the value or a default.
+- `Unwrap()`: Get the value or panic.
+- `Ptr()`: Convert to a pointer (nil if None).
+
+### Nullable
+
+`Nullable[T]` represents a value that might be null, designed specifically for
+handling null values in databases and JSON. Unlike `Option[T]`, which is for
+general-purpose optional values, `Nullable[T]` is optimized for scenarios
+involving external systems that use null values.
+
+Key operations:
+
+- `NullableOf(value)`: Create a valid Nullable.
+- `Null[T]()`: Create a null Nullable.
+- `NullableFromPtr(ptr)`: Create a Nullable from a pointer.
+- `IsNull()`: Check if null.
+- `IsValid()`: Check if not null.
+- `Extract()`: Get the value and validity.
+- `ExtractOr(default)`: Get the value or a default.
+- `ToPtr()`: Convert to pointer (nil if null).
+- `ToOption()`: Convert to Option type.
